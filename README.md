@@ -55,24 +55,26 @@ Create data sources using either Google Sheets or CSV files.
 - For this tutorial we will use Google Sheets:
 https://docs.google.com/spreadsheets/d/19BtCJ6GqEE0rKCVFcfgX8-rjLdPTK8KQbE7gHonjdJ4/edit?usp=sharing
 
+
+#### Consistent Naming Strategy
+
+You must choose one of these strategies and apply it consistently for all sheets, columns, and CSV files.
+
+| Pascal        | Camel         | Snake          | Kebab          |
+| ------------- | ------------- | -------------- | -------------- |
+| `SheetName`   | `sheetName`   | `sheet_name`   | `sheet-name`   |
+| `ColumnName`  | `columnName`  | `column_name`  | `column-name`  |
+| `FileName.csv`| `fileName.csv`| `file_name.csv`| `file-name.csv`|
+
+
 ### Step 2. Data Modeling
 
-<picture id="fig_1">
-  <source media="(prefers-color-scheme: dark)" srcset="imgs/table-map-regions-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="imgs/table-map-regions-light.png">
-  <img alt="table map regions" src="imgs/table-map-regions-light.png">
-</picture>
-
-**Figure 1:** [`map_regions` table](https://docs.google.com/spreadsheets/d/19BtCJ6GqEE0rKCVFcfgX8-rjLdPTK8KQbE7gHonjdJ4/edit?gid=1055644696#gid=1055644696)
-
-<br/>
-
-- Define a data model, be either `struct` or `class`, that implements the `IData` interface.
+- Define a data model, can be `struct` or `class`, and **must** implement `IData` interface.
 - Each field that should be mapped to a column of the data source must be decorated with `[SerializeField]`.
     - A public property will be generated for each valid field.
 - In case you prefer writing properties, each should be decorated with `[DataProperty]`.
     - The underlying field and methods will be generated.
-- The data model should be `partial` so that source generators can generate the underlying implementation.
+- The data model **must** be `partial` so that source generators can generate the underlying implementation.
 
 <br/>
 
@@ -95,7 +97,11 @@ public partial struct MapRegionIdData : IData
 
     // public int Region { get => _region; init => _region = value; }
 }
+```
 
+<p id="list_1"><b>Listing 1:</b> Data model for the ID of a map region entry</p>
+
+```cs
 public partial class MapRegionData : IData
 {
     [DataProperty]
@@ -120,9 +126,18 @@ public partial class MapRegionData : IData
 }
 ```
 
-As in [figure 1](#user-content-fig_1), each row represents a `MapRegionData` entry in a data table, marked by a different color.
+<p id="list_2"><b>Listing 2:</b> Data model for the map region entry</p>
 
-The ID of each `MapRegionData` entry is a complex type, consists of two fields `MapId` and `Region`.
+<picture id="fig_1">
+  <source media="(prefers-color-scheme: dark)" srcset="imgs/table-map-regions-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="imgs/table-map-regions-light.png">
+  <img alt="table map regions" src="imgs/table-map-regions-light.png">
+</picture>
+
+**Figure 1:** [`map_regions` table](https://docs.google.com/spreadsheets/d/19BtCJ6GqEE0rKCVFcfgX8-rjLdPTK8KQbE7gHonjdJ4/edit?gid=1055644696#gid=1055644696)
+
+- Each row represents a `MapRegionData` entry in a data table, marked by a different color.
+- The `ID` of each entry is a complex type, consists of two fields `MapId` and `Region`.
 
 
 ## Limitations
