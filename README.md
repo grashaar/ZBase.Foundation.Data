@@ -6,8 +6,9 @@ A code-first data management workflow for C# and Unity, powered by [BakingSheet]
 
 - Clear separation between runtime data models and authoring data sources.
     - Authoring code, data sources and configuration will NOT be included in the build.
-- Support for Google Sheets and CSV files as data sources (powered by BakingSheet).
-- Support for complex data types (with some [limitations](#limitations)).
+- Data sources can be Google Sheets or CSV files (powered by BakingSheet).
+- Support for complex data types (powered by BakingSheet).
+    - There are only a few [Limitations](#limitations).
 - Automatic mapping between data sources and data models (powered by Source Generators).
 - Code-first approach with minimal configuration on Unity Inspector.
 - Flexible and automatic data type conversion mechanism.
@@ -38,18 +39,21 @@ A code-first data management workflow for C# and Unity, powered by [BakingSheet]
 openupm add com.zbase.foundation.data
 ```
 
-## Tutorial
-
-### Workflow Overview
+## General Workflow
 
 At high level, the usage workflow usually consists of the following steps:
 1. **Data Authoring**: Create data sources in Google Sheets or CSV files.
 2. **Data Modeling**: Design `IData` models in C# code along with the table assets to store them.
 3. **Data Exporting**: Leverage **BakingSheet** to import authored data from step 1 into each corresponding table asset. This step requires a piece of bridging code and a config asset.
 
+## Tutorial
+
 ### Step 1. Data Authoring
 
-This tutorial will use data from this [Google Spreadsheet](https://docs.google.com/spreadsheets/d/19BtCJ6GqEE0rKCVFcfgX8-rjLdPTK8KQbE7gHonjdJ4/edit?usp=sharing).
+Create data sources using either Google Sheets or CSV files.
+
+- For this tutorial we will use Google Sheets:
+https://docs.google.com/spreadsheets/d/19BtCJ6GqEE0rKCVFcfgX8-rjLdPTK8KQbE7gHonjdJ4/edit?usp=sharing
 
 ### Step 2. Data Modeling
 
@@ -59,7 +63,7 @@ This tutorial will use data from this [Google Spreadsheet](https://docs.google.c
   <img alt="table map regions" src="imgs/table-map-regions-light.png">
 </picture>
 
-**Figure 1:** `map_regions` table
+**Figure 1:** [`map_regions` table](https://docs.google.com/spreadsheets/d/19BtCJ6GqEE0rKCVFcfgX8-rjLdPTK8KQbE7gHonjdJ4/edit?gid=1055644696#gid=1055644696)
 
 <br/>
 
@@ -83,8 +87,8 @@ public partial struct MapRegionIdData : IData
     [SerializeField]
     private int _region;
 
-    // The source generator for IData will generate
-    // a corresponding property under the hood.
+    // IData source generator will generate
+    // a property for each field.
     // ===
 
     // public int MapId { get => _mapId; init => _mapId = value; }
@@ -100,8 +104,8 @@ public partial class MapRegionData : IData
     [DataProperty]
     public int UnlockCost => Get_UnlockCost();
 
-    // The source generator for IData will generate
-    // a field and a Get_XXX() method under the hood.
+    // IData source generator will generate
+    // a field and a Get_XXX() method for each property.
     // ===
 
     // [SerializeField]
