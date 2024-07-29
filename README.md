@@ -48,15 +48,26 @@ At high level, the usage workflow usually consists of the following steps:
 
 ## Tutorial
 
+For this tutorial:
+- Data sources are defined in [Google Sheets](https://docs.google.com/spreadsheets/d/19BtCJ6GqEE0rKCVFcfgX8-rjLdPTK8KQbE7gHonjdJ4/edit?usp=sharing)
+- Data models and table assets located at [Assets/Samples](./Assets/Samples/)
+- Data exporting configs located at [Assets/Samples.Authoring](./Assets/Samples.Authoring/)
+
 ### Step 1. Data Authoring
 
-Create data sources using either Google Sheets or CSV files.
+#### 1.1. Create Data Sources
 
-- For this tutorial we will use Google Sheets:
-https://docs.google.com/spreadsheets/d/19BtCJ6GqEE0rKCVFcfgX8-rjLdPTK8KQbE7gHonjdJ4/edit?usp=sharing
+Data sources can be either Google Sheets or CSV files.
 
+<picture id="fig_1">
+  <source media="(prefers-color-scheme: dark)" srcset="imgs/table-map-regions-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="imgs/table-map-regions-light.png">
+  <img alt="table map regions" src="imgs/table-map-regions-light.png">
+</picture>
 
-#### Consistent Naming Strategy
+**Figure 1:** [`map_regions` table](https://docs.google.com/spreadsheets/d/19BtCJ6GqEE0rKCVFcfgX8-rjLdPTK8KQbE7gHonjdJ4/edit?gid=1055644696#gid=1055644696)
+
+#### 1.2. Use a Consistent Naming Strategy
 
 You must choose one of these strategies and apply it consistently for all sheets, columns, and CSV files.
 
@@ -66,21 +77,23 @@ You must choose one of these strategies and apply it consistently for all sheets
 | `ColumnName`  | `columnName`  | `column_name`  | `column-name`  |
 | `FileName.csv`| `fileName.csv`| `file_name.csv`| `file-name.csv`|
 
-
 ### Step 2. Data Modeling
 
+#### 2.1. Define Data Models
+
 - Define a data model, can be `struct` or `class`, and **must** implement `IData` interface.
-- Each field that should be mapped to a column of the data source must be decorated with `[SerializeField]`.
-    - A public property will be generated for each valid field.
+- Any field that should be mapped to a column in the data source must be decorated with `[SerializeField]`.
+    - A public property will be generated for such valid fields.
 - In case you prefer writing properties, each should be decorated with `[DataProperty]`.
-    - The underlying field and methods will be generated.
+    - The underlying field and methods will be generated for such valid properties.
 - The data model **must** be `partial` so that source generators can generate the underlying implementation.
+- Fields or properties are matched to columns in the data source by name, after applying the naming strategy.
+- The ID of a data model can be a complex structure, consists of multiple fields.
+    - These field named `_id` or `id` or the property named `Id` will be recognized as the ID of that model.
 
 <br/>
 
 ```csharp
-using ZBase.Foundation.Data;
-
 public partial struct MapRegionIdData : IData
 {
     [SerializeField]
@@ -99,7 +112,7 @@ public partial struct MapRegionIdData : IData
 }
 ```
 
-<p id="list_1"><b>Listing 1:</b> Data model for the ID of a map region entry</p>
+<p id="list_1"><b>Listing 1:</b> Model for the ID of a map region entry</p>
 
 ```cs
 public partial class MapRegionData : IData
@@ -111,7 +124,7 @@ public partial class MapRegionData : IData
     public int UnlockCost => Get_UnlockCost();
 
     // IData source generator will generate
-    // a field and a Get_XXX() method for each property.
+    // a field and a `Get_XXX()` method for each property.
     // ===
 
     // [SerializeField]
@@ -126,18 +139,45 @@ public partial class MapRegionData : IData
 }
 ```
 
-<p id="list_2"><b>Listing 2:</b> Data model for the map region entry</p>
+<p id="list_2"><b>Listing 2:</b> Model for the map region entry</p>
 
-<picture id="fig_1">
-  <source media="(prefers-color-scheme: dark)" srcset="imgs/table-map-regions-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="imgs/table-map-regions-light.png">
-  <img alt="table map regions" src="imgs/table-map-regions-light.png">
-</picture>
+#### 2.2. Define Data Table Assets
 
-**Figure 1:** [`map_regions` table](https://docs.google.com/spreadsheets/d/19BtCJ6GqEE0rKCVFcfgX8-rjLdPTK8KQbE7gHonjdJ4/edit?gid=1055644696#gid=1055644696)
+- Each data table asset type should inherit from either `DataTableAsset<TEntryId, TEntry>` or `DataTableAsset<TEntryId, TEntry, TConvertedId>`.
+    - `TEntryId` is the type of the `Id` property of `TEntry`.
+    - `TEntry` is the data model, corresponding to a row in the data source.
+    - `TConvertedId` is the type of the `Id` property of `TEntry` after being converted from `TEntryId`.
+- It is **required** to implement `IDataTableAsset` interface so source generator can generate additional but necessary code.
+- Ultimately this is a `ScriptableObject` to store the imported data.
 
-- Each row represents a `MapRegionData` entry in a data table, marked by a different color.
-- The `ID` of each entry is a complex type, consists of two fields `MapId` and `Region`.
+```cs
+public sealed partial class MapRegionDataTableAsset
+    : DataTableAsset<MapRegionIdData, MapRegionData, MapRegionId>
+    , IDataTableAsset
+{
+    protected override MapRegionId Convert(MapRegionIdData value)
+        => value;
+
+    // IDataTableAsset source generator will generate
+    // a constant field `NAME` and a `GetId()` method.
+    // ===
+
+    // public const string NAME = nameof(MapRegionDataTableAsset);
+
+    // protected override MapRegionIdData GetId(in MapRegionData data)
+    // {
+    //     return data.Id;
+    // }
+}
+```
+
+<p id="list_3"><b>Listing 3:</b> Data table asset for map region</p>
+
+### Step 3. Data Exporting
+
+#### 3.1. Declare a Bridge to BakingSheet
+
+
 
 
 ## Limitations
